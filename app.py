@@ -79,6 +79,7 @@ class app:
         self.ges = management(sintact.tokens,self.console)
         self.ges.llenar(sintact.errorSintactico)
         messagebox.showinfo("Genial","Análisis finalizado")
+        
     def reporteTokens(self):
         report = Reporte()
         report.reporteTokens("Tokens",self.tokens,None)
