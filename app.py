@@ -2,9 +2,18 @@ import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 from tkinter import filedialog
+from Analizador_Lexico import analizador
+from Analizador_Sintactico import Sintactico
+from management import management
+from Reportes import Reporte
+
 
 class app:
     def __init__(self,root:tk.Toplevel) -> None:
+        self.entrada= ""
+        self.tokens = []
+        self.errores = []
+        self.erroresSintacticos=[]
         #configuracion de la ventana
         root.title("Proyecto 2 - Analizador Bizdata")
         root.resizable(0,0)
@@ -22,21 +31,20 @@ class app:
         #Menu
         barra_Menu = Menu(root)
         filemenu = Menu(barra_Menu, tearoff=0)
-        filemenu.add_command(label="Abrir", ) #Cargar Archivo
+        filemenu.add_command(label="Abrir", command=self.carga) #Cargar Archivo
         filemenu.add_separator()
-        filemenu.add_command(label="Salir", ) #Salir
+        filemenu.add_command(label="Salir", command=root.quit) #Salir
         barra_Menu.add_cascade(label="Archivo", menu=filemenu)
 
         editmenu = Menu(barra_Menu, tearoff=0)
-        editmenu.add_command(label="Analizar", ) #Analizar Archivo
+        editmenu.add_command(label="Analizar", command=self.analizar) #Analizar Archivo
     
         barra_Menu.add_cascade(label="Analizar", menu=editmenu)
 
         #Reportes
         Menu_de_reportes = Menu(barra_Menu, tearoff=0)
-        Menu_de_reportes.add_command(label="Tokens", ) #reporte de tokens
-        Menu_de_reportes.add_command(label="Errores", ) #reporte de errores
-        Menu_de_reportes.add_command(label="Árbol de Derivación", ) # arbol
+        Menu_de_reportes.add_command(label="Tokens", command=self.reporteTokens) #reporte de tokens
+        Menu_de_reportes.add_command(label="Errores", command=self.reporteErrores) #reporte de errores
         barra_Menu.add_cascade(label="Reportes", menu=Menu_de_reportes)
         root.config(menu=barra_Menu)
         
@@ -48,7 +56,37 @@ class app:
 
         self.console = Text(consoleFrame,width=150,height=15)
         self.console.grid(row=0,column=0,padx=10,pady=10)
-        self.console.config(state="disabled")
+        #self.console.config(state="disabled")
+
+    def carga(self):
+        try:
+            path = filedialog.askopenfilename(filetypes=[('Texto plano', '*.bizdata')])
+            self.entrada = open(path,"r").read()
+            self.text.delete("1.0",END)
+            self.text.insert(INSERT,self.entrada)
+            messagebox.showinfo("Carga","Se cargaron los archivos con exito")
+        except:
+            messagebox.showerror("Error","Error al cargar el archivo")
+
+    def analizar(self):
+        text = self.text.get("1.0",END)
+        analizar = analizador()
+        analizar.analizar(text)
+        self.tokens = analizar.getTokens()
+        self.errores = analizar.getErrores()
+        sintact = Sintactico(self.tokens)
+        self.erroresSintacticos = sintact.error
+        self.ges = management(sintact.tokens,self.console)
+        self.ges.llenar(sintact.errorSintactico)
+        messagebox.showinfo("Genial","Análisis finalizado")
+    def reporteTokens(self):
+        report = Reporte()
+        report.reporteTokens("Tokens",self.tokens,None)
+    
+    def reporteErrores(self):
+        report = Reporte()
+        report.reporteTokens("Errores",self.errores,self.erroresSintacticos)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
